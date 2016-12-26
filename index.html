@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script type="text/javascript" src="jquery.js"></script>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<script type="text/javascript" src="bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/js/bootstrap-dialog.min.js"></script>
+	<script src="sketch.js" type="text/javascript">
+	</script>
+
+	<style>
+			#combo-input {
+			width: 500px;
+		}
+
+		.optionElement {
+			display: none;
+			margin-left: auto;
+			margin-right: auto;
+			width: 75%;
+		}
+
+		body {
+			padding: 40px 100px 100px 100px;
+			background-color: lightblue;
+			text-align: center;
+		}
+
+		.optionButton {
+			margin-top: 10px;
+			margin-left: auto;
+			margin-right: auto;
+			width: 50%;
+		}
+
+		#newComboForm {
+			padding: 40px 40px 40px 40px;
+		}
+
+		#optionsDiv {
+			padding: 40px 40px 40px 40px;
+		}
+
+		#practice-name {
+			margin-top: 30px;
+			font-size: 100px;
+		}
+
+		#practice-text {
+			margin-top: 100px;
+			font-size: 30px;
+			table {
+				font-family: arial, sans-serif;
+				border-collapse: collapse;
+				width: 100%;
+			}
+			td,
+			th {
+				border: 1px solid #0000ff;
+				text-align: center;
+				padding: 8px;
+				height: 100px;
+			}
+	</style>
+</head>
+
+<body>
+	<h1 class="text-center" style="font-size:50px"> Key Training </h1>
+	<h4 class="text-center"> Train sequences of key strokes | Designed to enhance memory of multiple patterns of combinations </h4>
+	<div id="optionsDiv">
+		<button id="ob-new" class="btn btn-default optionButton"> Create New Combination</button>
+		<button id="ob-delData" class="btn btn-info optionButton"> Manage Combinations </button>
+		<button id="ob-getData" class="btn btn-info optionButton"> Export Current Data </button>
+		<button id="ob-setData" class="btn btn-info optionButton"> Import Data </button>
+		<button id="ob-practice" class="btn btn-primary optionButton"> Pratice Single Combinations </button>
+		<button id="ob-train" class="btn btn-primary optionButton" onclick='location.href="training.html";'> Train All Combinations </button>
+	</div>
+	<!-- New Combination Div -->
+	<div id="newComboDiv" class="optionElement">
+		<u> Create new combination </u>
+		<form id="newComboForm" action="#">
+			<input type="text" style="width:70%;height:70%" name="name" id="ii1" placeholder="Enter your combo name">
+			<br>
+			<input type="text" style="width:70%;height:70%" name="combo" id="ii2" placeholder="Enter your combo eg(abcd hi :73n o)">
+			<br>
+			<button type="submit" value="submit" class="btn btn-success">Create New Combo (Hint: Click Enter)</button>
+			<br />
+			<p id="combcount">
+			</p>
+		</form>
+	</div>
+	<!-- Practice Combination Div -->
+	<div id="practiceComboDiv" class="optionElement">
+		<u> Select combination to practice </u>
+		<br> <br> <br>
+		<div id="combo-menu"> </div>
+	</div>
+	<!-- Export Data Div -->
+	<div id="exportDataDiv" class="optionElement">
+		<u> Export your data. If you are going to share with friends, you should disable statistics. If you want to backup or transfer your statistics, enable statistics.</u>
+		<br>
+		<form action="#">
+			<input type="radio" name="thing" id='ra1'> Enable Stats
+			<br>
+			<input type="radio" name="thing" id='ra2'> Disable Stats
+		</form>
+		<button class='btn btn-success' id='exportButton'>Get Export Code </button>
+		<textarea id="exportDataText" style="width:100%;height:500px"></textarea>
+	</div>
+	<!-- Import Data Div -->
+	<div id="importDataDiv" class="optionElement">
+		<u> Import Data (Warning: It will override your current data. If you want to backup your current data, export it) Key Training will not function if the imported data is accidently tampered with. If Key Training is not functioning, type in "{}" without the quotes to reset the data. You can customize JSON values if you want to </u>
+		<textarea style="width:100%;height:100%" id="importText"></textarea>
+
+		<button class="btn btn-success" id="importButton"> Import </button>
+	</div>
+	<div id="deleteDataDiv" class="optionElement">
+		<u> Manage Combinations </u>
+		<div id="deleteDataMenu"> </div>
+		<button class="btn btn-warning" id="b-delete"> Delete </button>
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="practice-text-title">Modal title</h4>
+				</div>
+				<div class="modal-body">
+					<p id="practice-status">---Start Typing---</p>
+					<p id="practice-text"></p>
+					<p id="practice-results"></p>
+					<p id="practice-records"></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>

@@ -1,0 +1,264 @@
+<!doctype html>
+<html>
+
+<head>
+	<script type="text/javascript" src="jquery.js"></script>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<script type="text/javascript" src="bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/js/bootstrap-dialog.min.js"></script>
+	<style>
+		body {
+			background-color: rgb(125, 178, 240);
+			margin: 30px 30px 30px 30px;
+			text-align: center;
+		}
+
+		#userinput {
+			padding: 10px;
+			border: none;
+			border-bottom: solid 10px #e7a512;
+			transition: border 0.8s;
+			font-size: 40px;
+			width: 500px;
+			height: 40px;
+			padding: 10px;
+		}
+	</style>
+	<script>
+		var localStorageKey = 'c';
+		var maxMasteryLevel = 10;
+		var minMasteryLevel = 1;
+		var currentCombo;
+		var alreadyAnswered = false;
+		var previousCombo;
+		$(document).ready(function() {
+
+				//For debug
+				//clearTrainingData();
+
+				startNewTrainingSession();
+				$("#average").html("Mastery Average (" + minMasteryLevel + "-" + maxMasteryLevel + "): " + getAverage());
+
+				$("#form").on("submit", function(e) {
+					e.preventDefault();
+					var answer = $("#userinput").val();
+					$("#form")[0].reset();
+					$("#answer").html("");
+					var db = dbGetAll();
+					//Check if correct and adjust mastery level +- 1
+					if (answer === currentCombo['combo']) {
+						//Correct
+						previousCombo = currentCombo;
+						if (!alreadyAnswered)
+							db[currentCombo.name]['ml'] += 1;
+						$("#userinput").css({
+							"border-bottom": "solid 10px #2eee0e"
+						});
+						$("#answer").css("color", "rgb(34, 189, 21)");
+						//New combo
+						displayNewCombo();
+					} else {
+						//Not correct
+						$("#userinput").css({
+							"border-bottom": "solid 10px #e8140e"
+						});
+						if (!alreadyAnswered) {
+							if (db[currentCombo.name]['ml'] >= minMasteryLevel+1)
+								db[currentCombo.name]['ml'] -= minMasteryLevel;
+							alreadyAnswered = true;
+						} else {
+							//Display the answer
+							showAnswer();
+						}
+					}
+					dbSet(db);
+					$("#average").html("Mastery Average (1-10): " + getAverage());
+				})
+				$("#showStats").click(function() {
+					var db = dbGetAll();
+					//Object.keys(Player.list).length;
+					var text = "";
+					var total = 0;
+					text += "<b> Training System is based on Mastery Level probability </b>"
+					text += "<p> Current Mastery Average Level: " + getAverage() + "</p>"
+					for (var i in db) {
+						text += "<blockquote>";
+						text += "<p id='12a'>" + i + " | " + db[i].combo + "</p>";
+						text += "<footer id='12b'> Mastery Level: " + db[i].ml + " </footer>";
+						text += "</blockquote>";
+					}
+					BootstrapDialog.show({
+						title: "Mastery Levels: Min: " + minMasteryLevel + " - Max: " + maxMasteryLevel,
+						message: text
+					});
+				});
+
+
+			}) //End of document.ready
+		function getAverage() {
+			var db = dbGetAll();
+			var total = 0;
+			for (var i in db) {
+				total += db[i].ml;
+			}
+			return total / Object.keys(db).length;
+		}
+
+		function clearTrainingData() {
+			//Clear all training data
+			var db = dbGetAll();
+			for (var i in db) {
+				delete db[i]["ml"];
+			}
+			dbSet(db);
+		}
+
+		function startNewTrainingSession() {
+			var db = dbGetAll();
+			//Set everything to average if mastery level is not defined
+			for (var i in db) {
+				if (!db[i]["ml"])
+					db[i]["ml"] = Math.floor((maxMasteryLevel + minMasteryLevel) / 2);
+			}
+			dbSet(db);
+			displayNewCombo();
+		}
+
+		function showAnswer() {
+			$("#userinput").css({
+				"border-bottom": "solid 10px #e8140e"
+			});
+			$("#answer").css("color", "#d9320d");
+			$("#answer").html("Answer: " + currentCombo.combo);
+		}
+
+		function displayNewCombo() {
+			alreadyAnswered = false;
+			var combo = getNewCombo();
+			if (combo) {
+				//Display the combo name
+				currentCombo = combo;
+				$('#term').html(combo.name);
+			} else {
+				//Everything is mastered
+				BootstrapDialog.show({
+					title: 'You have mastered everything!',
+					message: 'Do you want to reset your mastery levels for all terms?',
+					buttons: [{
+						label: 'Reset',
+						action: function(dialog) {
+							var db = dbGetAll();
+							for (var i in db) {
+								delete db[i]['ml'];
+							}
+							dbSet(db);
+							startNewTrainingSession();
+							location.reload();
+							dialog.close();
+						}
+					}, {
+						label: 'No',
+						action: function(dialog) {
+							location.href = "index.html";
+							dialog.close();
+						}
+					}]
+				});
+			}
+		}
+
+		function getNewCombo() {
+			var db = dbGetAll();
+			var dbarr = [];
+			var c = 0;
+			//Construct an array from db
+			for (var i in db) {
+				dbarr.push(db[i]);
+				if (db[i]['ml'] === maxMasteryLevel) {
+					c += 1;
+				}
+			}
+			//If everything is mastered
+			if (c == dbarr.length) {
+				return null;
+			}
+			//Choose a random element based on probabilty using mastery level
+			var l = 0;
+			while (true) {
+				var combo = dbarr[Math.floor(Math.random() * dbarr.length)];
+				var comboMasteryLevel = combo['ml'];
+				var n = Math.floor(Math.random() * (maxMasteryLevel+1))
+				if (previousCombo) {
+					if (comboMasteryLevel < n && (combo['name'] != previousCombo['name'] || c >= dbarr.length-3)) {
+						return combo;
+					}
+				} else {
+					if (comboMasteryLevel < n) {
+						return combo;
+					}
+				}
+
+
+
+				l += 1;
+				if (l > 10000) {
+					return null
+				}
+
+			}
+		}
+
+		function dbUpdate(d) {
+			//d has key, data
+			var db = dbGetAll();
+			db[d.key] = d.data;
+			localStorage.setItem(localStorageKey, JSON.stringify(db));
+		}
+
+		function dbSet(d) {
+			localStorage.setItem(localStorageKey, JSON.stringify(d));
+		}
+
+		function dbGetAll() {
+			var a = localStorage.getItem(localStorageKey);
+			if (a == "undefined" || a == "")
+				return {};
+			var db = JSON.parse(a);
+			if (db) {
+				return db
+			}
+			return {};
+		}
+
+		function dbGetFromKey(key) {
+			//Get from key
+			var db = dbGetAll();
+			var e = db[key];
+			if (e) {
+				return e;
+			}
+			return
+		}
+	</script>
+</head>
+
+<body>
+	<a href="index.html">
+    Home
+  </a> <br />
+	<h1>Training</h1>
+	<button class='btn btn-info' id="showStats">Show Stats</button>
+	<br /> <br /><br />
+	<p id="average"></p>
+	<br /> <br />
+	<form id="form" action="#">
+		<label for="userinput" id="term" style="font-size:30px;font-family:sans-serif;font-size:100px;color:rgb(99, 44, 200)"></label> <br /><br /><br />
+		<input type="text" class="form-control" id="userinput">
+		<p style="font-size:20px" id="answer"></p>
+	</form>
+
+
+</body>
+
+</html>
